@@ -37,5 +37,26 @@
                 </configuration>
             </definition>
         </datasource>
+        <datasource>
+            <name>MYSQL_TEST_DB</name>
+            <description>The datasource used for Testing data provider</description>
+            <jndiConfig>
+                <name>jdbc/MYSQL_TEST_DB</name>
+            </jndiConfig>
+            <definition type="RDBMS">
+                <configuration>
+                    <url>jdbc:mysql://localhost:3306/TestDB</url>
+                    <username>root</username>
+                    <password>charuka123</password>
+                    <driverClassName>com.mysql.jdbc.driver</driverClassName>
+                    <maxActive>50</maxActive>
+                    <maxWait>60000</maxWait>
+                    <testOnBorrow>true</testOnBorrow>
+                    <validationQuery>SELECT 1</validationQuery>
+                    <validationInterval>30000</validationInterval>
+                    <defaultAutoCommit>false</defaultAutoCommit>
+                </configuration>
+            </definition>
+        </datasource>
     </datasources>
 </datasources-configuration>

@@ -18,6 +18,10 @@ module.exports = {
                 }],
             },
             {
+                test: /\.json$/,
+                loader: 'json-loader'
+            },
+            {
                 test: /\.js$/,
                 exclude: /node_modules/,
                 use: [

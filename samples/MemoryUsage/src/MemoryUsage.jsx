@@ -17,7 +17,7 @@
  */
 
 import React, {Component} from 'react';
-import {CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis} from 'recharts';
+import {CartesianGrid, Legend, Line, LineChart, Bar, BarChart, Tooltip, XAxis, YAxis} from 'recharts';
 
 var data = [];
 
@@ -40,7 +40,7 @@ class MemoryUsage extends Component {
         this.publishData = this.publishData.bind(this);
         const self = this;
         const ws = new WebSocket('ws://localhost:8080/server-stats/memory');
-        ws.onmessage = function(event) {
+        ws.onmessage = function (event) {
             self.publishData(event.data);
         };
     }
@@ -81,16 +81,16 @@ class MemoryUsage extends Component {
         };
         return (
             <section style={styles}>
-                <LineChart width={this.state.width} height={this.state.height} data={this.state.data}
-                           margin={{top: 30, right: 30, left: 20, bottom: 10}}>
-                    <XAxis dataKey="timestamp" />
-                    <YAxis />
-                    <CartesianGrid strokeDasharray="10 10" vertical={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type='monotone' dataKey='memory' name='Memory %' stroke='#9C27B0'
-                          isAnimationActive={false} dot={false} />
-                </LineChart>
+                <BarChart width={this.state.width} height={this.state.height} data={this.state.data}
+                          margin={{top: 30, right: 30, left: 20, bottom: 10}}>
+                    <XAxis dataKey="timestamp"/>
+                    <YAxis/>
+                    <CartesianGrid strokeDasharray="10 10" vertical={false}/>
+                    <Tooltip/>
+                    <Legend/>
+                    <Bar dataKey='memory' name='Memory %' stroke='#9C27B0'
+                         isAnimationActive={false} dot={false}/>
+                </BarChart>
             </section>
         );
     }
