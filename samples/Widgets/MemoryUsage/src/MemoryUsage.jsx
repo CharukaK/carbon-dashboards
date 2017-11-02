@@ -35,23 +35,12 @@ class MemoryUsage extends Component {
 
         this.config={
             x:'timestamp',
-            charts:[{y:'value'}],
-            height:800,
-            width:400,
+            charts:[{type : 'line', y:'value'}],
+            height:props.glContainer.height,
+            width:props.glContainer.width,
             maxLength:30
         };
 
-    }
-
-    componentDidMount(){
-        let {vis}=this.state;
-        vis=new vizg({metadata:this.metadata,data:this.state.data},this.config);
-
-        vis.draw(this.divRef);
-
-        this.setState({
-            vis:vis
-        })
     }
 
     formatDateLabel(dt) {
@@ -90,18 +79,7 @@ class MemoryUsage extends Component {
     render() {
         return (
             <section id={'sectionShit'}>
-
-                {/*<VictoryChart*/}
-                    {/*height={800}*/}
-                    {/*width={900}*/}
-
-                {/*>*/}
-
-
-                <div ref={(ref)=>{this.divRef=ref}}>
-
-                </div>
-                {/*</VictoryChart>*/}
+            <VizG config={this.config} metadata={this.metadata} data={[["A",23],["B",34],["C",44]]}/>
             </section>
         );
     }
