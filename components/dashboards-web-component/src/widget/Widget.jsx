@@ -18,6 +18,9 @@
  */
 
 import React, { Component } from 'react';
+import DashboardChannel from "../utils/dashboard-channel/WidgetChannelManager";
+
+let widgetChannelManager = null;
 
 export default class Widget extends Component {
     constructor() {
@@ -78,5 +81,13 @@ export default class Widget extends Component {
                 }
             }
         };
+    }
+
+    getWidgetChannelManager(){
+        if(!widgetChannelManager){
+            widgetChannelManager= new DashboardChannel();
+        }
+
+        return widgetChannelManager;
     }
 }
