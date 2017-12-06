@@ -23,35 +23,37 @@ export default class UniversalGadget extends ExtendedWidget {
         this.state = {
             metadata: null,
             data: null,
-            config: {
-                x: 'rpm',
-                charts: [
-                    {type: 'line', y: 'horsepower', fill: '#2ca02c'},
-                    {type: 'line', y: 'torque', fill: '#ff7f0e'},
-                ],
-                maxLength: 7,
-                width: 700,
-                height: 450,
-            },
+            config: props.gadgetConfig['chart-conf'],
         }
     }
-
     componentDidMount() {
         this.handleWidgetData = this.handleWidgetData.bind(this);
-        let providerConfiguration = {
-            providerName: 'RDBMSBatchDataProvider',
-            dataProviderConfiguration: {
-                datasourceName: 'DEMO_DB',
-                query: 'select * from FraudTable',
-                tableName: 'FraudTable',
-                incrementalColumn: 'PersonID',
-                publishingInterval: 5,
-                purgingInterval: 5,
-                publishingLimit: 1000,
-                purgingLimit: 1000,
-                isPurgingEnable: false,
-            }
-        };
+        let providerConfiguration = this.props.gadgetConfig['provider-conf'];
+        // {
+        //     providerName: 'RDBMSBatchDataProvider',
+        //         dataProviderConfiguration: {
+        //     datasourceName: 'DEMO_DB',
+        //         query: 'select * from FraudTable',
+        //         tableName: 'FraudTable',
+        //         incrementalColumn: 'PersonID',
+        //         publishingInterval: 5,
+        //         purgingInterval: 5,
+        //         publishingLimit: 1000,
+        //         purgingLimit: 1000,
+        //         isPurgingEnable: false,
+        // }
+
+        // {
+        //     x: 'rpm',
+        //         charts: [
+        //     {type: 'line', y: 'horsepower', fill: '#2ca02c'},
+        //     {type: 'line', y: 'torque', fill: '#ff7f0e'},
+        // ],
+        //     maxLength: 7,
+        //     width: 700,
+        //     height: 450,
+        // }
+
         super.getWidgetChannelManager().subscribeWidget(this.props.id,this.handleWidgetData,providerConfiguration);
     }
 

@@ -19,6 +19,8 @@
 import React, {Component} from 'react';
 import {Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis} from 'recharts';
 import Widget from '@wso2-dashboards/widget';
+// import VizG from '../../../../components/dashboards-web-component/src/universal-gadget/VizG/VizG';
+import UniversalGadget from '../../../../components/dashboards-web-component/src/universal-gadget/UniversalGadget';
 
 let data = [];
 const DATA_POINT_COUNT = 25;
@@ -44,6 +46,32 @@ class CpuUsage extends Widget {
             let data = JSON.parse(event.data);
             self.publishData(data.timestamp, data.process, data.system.load);
         };
+        this.config = {
+            'provider-conf': {
+                providerName: 'RDBMSBatchDataProvider',
+                dataProviderConfiguration: {
+                    datasourceName: 'DEMO_DB',
+                    query: 'select * from FraudTable',
+                    tableName: 'FraudTable',
+                    incrementalColumn: 'PersonID',
+                    publishingInterval: 5,
+                    purgingInterval: 5,
+                    publishingLimit: 1000,
+                    purgingLimit: 1000,
+                    isPurgingEnable: false,
+                }
+            },
+            'chart-conf': {
+                x: 'rpm',
+                charts: [
+                    {type: 'line', y: 'horsepower', fill: '#2ca02c'},
+                    {type: 'line', y: 'torque', fill: '#ff7f0e'},
+                ],
+                maxLength: 7,
+                width: 700,
+                height: 450,
+            }
+        }
     }
 
     static _formatDateLabel(dt) {
@@ -82,18 +110,7 @@ class CpuUsage extends Widget {
         };
         return (
             <section style={styles}>
-                <AreaChart width={this.state.width} height={this.state.height} data={this.state.data}
-                           margin={{top: 30, right: 30, left: 20, bottom: 10}}>
-                    <XAxis dataKey="timestamp"/>
-                    <YAxis />
-                    <CartesianGrid strokeDasharray="10 10" vertical={false}/>
-                    <Tooltip />
-                    <Legend />
-                    <Area type='monotone' dataKey='system' name='System %' stroke='#FF9800' fill='#FF9800'
-                          fillOpacity={0.6} isAnimationActive={false}/>
-                    <Area type='monotone' dataKey='jvm' name='JVM %' stroke='#2196F3' fill='#2196F3'
-                          fillOpacity={0.6} isAnimationActive={false}/>
-                </AreaChart>
+                <UniversalGadget config={this.config}/>
             </section>
         );
     }
