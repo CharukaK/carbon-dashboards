@@ -40,11 +40,15 @@ class ReactTableTest extends Component {
     }
 
     componentDidMount() {
-        this._handleData(this.props);
+        if (this.props.metadata !== null) {
+            this._handleData(this.props);
+        }
     }
 
     componentWillReceiveProps(nextProps) {
-        this._handleData(nextProps);
+        if (this.props.metadata !== null) {
+            this._handleData(nextProps);
+        }
     }
 
     /**
@@ -54,7 +58,7 @@ class ReactTableTest extends Component {
      */
     _handleData(props) {
         let { config, metadata, data } = props;
-        let tableConfig = config.charts[0];
+        const tableConfig = config.charts[0];
         let { dataSet, columnArray, initialized, columnColorIndex, colorScale } = this.state;
         colorScale = Array.isArray(tableConfig.colorScale) ? tableConfig.colorScale : getDefaultColorScale();
 
@@ -63,17 +67,17 @@ class ReactTableTest extends Component {
         }
 
         tableConfig.columns.map((column, i) => {
-            let colIndex = metadata.names.indexOf(column);
+            const colIndex = metadata.names.indexOf(column);
 
             if (colIndex === -1) {
-                throw new VizGError('TableChart','Unknown data column defined in the table chart configuration');
+                throw new VizGError('TableChart', 'Unknown data column defined in the table chart configuration');
             }
 
             if (!initialized) {
                 columnArray.push({
                     datIndex: colIndex,
                     title: tableConfig.columnTitles[i] || column,
-                    accessor: column
+                    accessor: column,
                 });
             }
 
@@ -109,7 +113,7 @@ class ReactTableTest extends Component {
         });
 
         data = data.map((d) => {
-            let tmp = {};
+            const tmp = {};
             for (let i = 0; i < metadata.names.length; i++) {
                 tmp[metadata.names[i]] = d[i];
             }
@@ -125,11 +129,11 @@ class ReactTableTest extends Component {
         }
 
         this.setState({
-            dataSet: dataSet,
-            columnColorIndex: columnColorIndex,
-            columnArray: columnArray,
-            initialized: initialized,
-            colorScale: colorScale
+            dataSet,
+            columnColorIndex,
+            columnArray,
+            initialized,
+            colorScale,
         });
     }
 
@@ -138,12 +142,12 @@ class ReactTableTest extends Component {
     }
 
     render() {
-        let { config, metadata } = this.props;
-        let { dataSet, columnArray } = this.state;
-        let chartConfig = [];
+        const { config, metadata } = this.props;
+        const { dataSet, columnArray } = this.state;
+        const chartConfig = [];
 
         columnArray.map((column, i) => {
-            let columnConfig = {
+            const columnConfig = {
                 Header: column.title,
                 accessor: column.accessor,
             };
@@ -161,6 +165,11 @@ class ReactTableTest extends Component {
                             textAlign: 'center',
                         }}
                     >
+                        <span>{props.value}</span>
+                    </div>);
+            } else {
+                columnConfig.Cell = props => (
+                    <div>
                         <span>{props.value}</span>
                     </div>);
             }
@@ -182,7 +191,7 @@ class ReactTableTest extends Component {
 ReactTableTest.propTypes = {
     config: PropTypes.object.isRequired,
     metadata: PropTypes.object.isRequired,
-    data: PropTypes.array
+    data: PropTypes.array,
 };
 
 export default ReactTableTest;

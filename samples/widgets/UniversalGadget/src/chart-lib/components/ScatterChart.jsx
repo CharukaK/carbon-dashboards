@@ -25,8 +25,8 @@ import PropTypes from 'prop-types';
 import { scaleLinear } from 'd3';
 import { getDefaultColorScale } from './helper';
 import VizGError from '../VizGError';
-import ChartSkeleton from './ChartSkeleton.jsx';
-import { getLegendComponent } from './ComponentGenerator.jsx';
+import ChartSkeleton from './ChartSkeleton';
+import { getLegendComponent } from './ComponentGenerator';
 
 const LEGEND_DISABLED_COLOR = '#d3d3d3';
 
@@ -52,11 +52,20 @@ export default class ScatterCharts extends React.Component {
     }
 
     componentDidMount() {
-        this._handleAndSortData(this.props);
+        if (this.props.metadata !== null) {
+            this._handleAndSortData(this.props);
+        }
     }
 
     componentWillReceiveProps(nextProps) {
-        this._handleAndSortData(nextProps);
+        if (!this.props.append) {
+            this.state.dataSets = {};
+            this.state.chartArray = [];
+            this.state.initialized = false;
+        }
+        if (this.props.metadata !== null) {
+            this._handleAndSortData(nextProps);
+        }
     }
 
     componentWillUnmount() {
@@ -84,7 +93,6 @@ export default class ScatterCharts extends React.Component {
             let colorIndex = metadata.names.indexOf(chart.color);
             const sizeIndex = metadata.names.indexOf(chart.size);
             xScale = metadata.types[xIndex] === 'time' ? 'time' : xScale;
-
 
             if (xIndex === -1) {
                 throw new VizGError('ScatterChart', "Unknown 'x' field defined in the Scatter Plot config.");
@@ -242,7 +250,14 @@ export default class ScatterCharts extends React.Component {
                                     },
                                 },
                             }]}
-
+                            animate={
+                                config.animate ?
+                                    {
+                                        onEnter: {
+                                            duration: 100,
+                                        },
+                                    } : null
+                            }
                         />
                     ));
                 });
@@ -292,32 +307,32 @@ export default class ScatterCharts extends React.Component {
             <div style={{ overflow: 'hidden' }}>
                 <div
                     style={
-                        legend ?
-                        {
-                            width: !config.legendOrientation ? '80%' :
+                        config.legend && legend ?
+                            {
+                                width: !config.legendOrientation ? '80%' :
                                     (() => {
                                         if (config.legendOrientation === 'left' ||
                                             config.legendOrientation === 'right') {
                                             return '80%';
                                         } else return '100%';
                                     })(),
-                            display: !config.legendOrientation ? 'inline' :
+                                display: !config.legendOrientation ? 'inline' :
                                     (() => {
                                         if (config.legendOrientation === 'left' ||
                                             config.legendOrientation === 'right') {
                                             return 'inline';
                                         } else return null;
                                     })(),
-                            float: !config.legendOrientation ? 'right' : (() => {
-                                if (config.legendOrientation === 'left') return 'right';
-                                else if (config.legendOrientation === 'right') return 'left';
-                                else return null;
-                            })(),
-                        } : null
+                                float: !config.legendOrientation ? 'right' : (() => {
+                                    if (config.legendOrientation === 'left') return 'right';
+                                    else if (config.legendOrientation === 'right') return 'left';
+                                    else return null;
+                                })(),
+                            } : null
                     }
                 >
                     {
-                        legend && (config.legendOrientation && config.legendOrientation === 'top') ?
+                        config.legend && legend && (config.legendOrientation && config.legendOrientation === 'top') ?
                             getLegendComponent(config, legendItems, ignoreArray, this._legendInteraction, height, width)
                             : null
                     }
@@ -325,7 +340,7 @@ export default class ScatterCharts extends React.Component {
                         {chartComponents}
                     </ChartSkeleton>
                     {
-                        legend && (!config.legendOrientation || config.legendOrientation !== 'top') ?
+                        config.legend && legend && (!config.legendOrientation || config.legendOrientation !== 'top') ?
                             getLegendComponent(config, legendItems, ignoreArray, this._legendInteraction, height, width)
                             : null
                     }

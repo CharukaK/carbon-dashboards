@@ -125,6 +125,8 @@ export default  class WidgetsList extends React.Component {
             isDashboardLoaded = true;
         }
         if (!(widgets.length === 0) && isDashboardLoaded) {
+            console.log("AAAAAAAAA")
+            console.log(widgets)
             widgets.map(widget => {
                 newItemConfig = {
                     title: widget.name,
@@ -133,7 +135,11 @@ export default  class WidgetsList extends React.Component {
                     props: {id: DashboardUtils.generateguid(), configs: widget.configs}
                 };
                 widgetListDragSources.set(widget.name, widgetLoadingComponent.createDragSource(document.getElementById(widget.name), newItemConfig));
-                widgetLoadingComponent.loadWidget(widget.name);
+                if(widget.configs.isGenerated) {
+                    widgetLoadingComponent.loadWidget('UniversalGadget');
+                } else {
+                    widgetLoadingComponent.loadWidget('UniversalGadget');
+                }
             });
             if (initDashboardFlag || isPreviouslyInitialized) {
                 widgetLoadingComponent.initializeDashboard();

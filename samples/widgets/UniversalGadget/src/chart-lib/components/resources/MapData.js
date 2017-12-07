@@ -16,6 +16,7 @@
  * under the License.
  */
 
-import VizG from './VizG.jsx';
-
-export default VizG;
+export { default as WorldMap } from './world.json';
+export { default as EuropeMap } from './europe.json';
+export { default as USAMap } from './usa2.json';
+export { default as CountryInfo } from './countryInfo.json';

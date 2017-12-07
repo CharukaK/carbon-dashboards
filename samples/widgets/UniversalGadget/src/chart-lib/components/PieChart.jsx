@@ -28,6 +28,9 @@ import {
 import PropTypes from 'prop-types';
 import { getDefaultColorScale } from './helper';
 import VizGError from '../VizGError';
+import { getLegendComponent } from './ComponentGenerator';
+
+const LEGEND_DISABLED_COLOR = '#d3d3d3';
 
 export default class PieCharts extends React.Component {
     constructor(props) {
@@ -44,17 +47,27 @@ export default class PieCharts extends React.Component {
             scatterPlotRange: [],
             randomUpdater: 0,
         };
-
+        this.config = props.config;
         this._handleAndSortData = this._handleAndSortData.bind(this);
         this._handleMouseEvent = this._handleMouseEvent.bind(this);
+        this._legendInteraction = this._legendInteraction.bind(this);
     }
 
     componentDidMount() {
-        this._handleAndSortData(this.props);
+        if (this.props.metadata !== null) {
+            this._handleAndSortData(this.props);
+        }
     }
 
     componentWillReceiveProps(nextProps) {
-        this._handleAndSortData(nextProps);
+        if (!this.props.append) {
+            this.state.dataSets = {};
+            this.state.chartArray = [];
+            this.state.initialized = false;
+        }
+        if (this.props.metadata !== null) {
+            this._handleAndSortData(nextProps);
+        }
     }
 
     componentWillUnmount() {
@@ -65,6 +78,29 @@ export default class PieCharts extends React.Component {
         const { onClick } = this.props;
 
         return onClick && onClick(evt);
+    }
+
+    /**
+     * Function used to disable a chart component when clicked on it's name in the legend.
+     * @param {Object} props parameters recieved from the legend component
+     */
+    _legendInteraction(props) {
+        const { ignoreArray } = this.state;
+        const ignoreIndex = ignoreArray
+            .map(d => d.name)
+            .indexOf(props.datum.name);
+        if (ignoreIndex > -1) {
+            ignoreArray.splice(ignoreIndex, 1);
+        } else {
+            ignoreArray.push({ name: props.datum.name });
+        }
+        this.setState({
+            ignoreArray,
+        });
+        const fill = props.style ? props.style.fill : null;
+        return fill === LEGEND_DISABLED_COLOR ?
+            null :
+            { style: { fill: LEGEND_DISABLED_COLOR } };
     }
 
     /**
@@ -192,7 +228,9 @@ export default class PieCharts extends React.Component {
             }
 
             chartComponents.push((
-                <svg width='100%' height={'100%'} viewBox={`0 0 ${height > width ? width : height} ${height > width ? width : height}`}>
+                <svg
+                    viewBox={`0 0 ${height > width ? width : height} ${height > width ? width : height}`}
+                >
                     <VictoryPie
                         height={height > width ? width : height}
                         width={height > width ? width : height}
@@ -204,7 +242,7 @@ export default class PieCharts extends React.Component {
                                 pointerLength={4}
                                 cornerRadius={2}
                                 flyoutStyle={{ fill: '#000', fillOpacity: '0.8', strokeWidth: 0 }}
-                                style={{ fill: '#b0b0b0'}}
+                                style={{ fill: '#b0b0b0' }}
                             />}
                         labels={config.percentage === 'percentage' ? '' : d => `${d.x} : ${((d.y / total) * 100).toFixed(2)}%`}
                         style={{ labels: { fontSize: 6 } }}
@@ -224,14 +262,22 @@ export default class PieCharts extends React.Component {
                             },
                         }]}
                         randomUpdater={randomUpdater}
+                        animate={
+                            config.animate ?
+                                {
+                                    onEnter: {
+                                        duration: 100,
+                                    },
+                                } : null
+                        }
                     />
                     {
                         config.percentage ?
                             <VictoryLabel
                                 textAnchor="middle"
                                 verticalAnchor="middle"
-                                x={height / 2}
-                                y={width / 2}
+                                x="50%"
+                                y="50%"
                                 text={`${Math.round(dataSets[0].y)}%`}
                                 style={{ fontSize: 45, fill: config.labelColor || 'black' }}
                             /> : null
@@ -240,15 +286,15 @@ export default class PieCharts extends React.Component {
             ));
         });
         return (
-            <div style={{ overflow: 'hidden' }}>
+            <div style={{ overflow: 'visible', height: this.props.height || height, width: this.props.width || width }}>
                 {
-                    legend && (config.legendOrientation && config.legendOrientation === 'top') ?
-                        this.generateLegendComponent(config, legendItems) :
+                    (config.legend || legend) && (config.legendOrientation && config.legendOrientation === 'top') ?
+                        getLegendComponent(config, legendItems, [], null, height, width) :
                         null
                 }
                 <div
                     style={{
-                        width: !legend ? '100%' :
+                        width: !(config.legend || legend) ? '100%' :
                             (() => {
                                 if (!config.legendOrientation) return '80%';
                                 else if (config.legendOrientation === 'left' || config.legendOrientation === 'right') {
@@ -271,77 +317,10 @@ export default class PieCharts extends React.Component {
                     {chartComponents}
                 </div>
                 {
-                    legend && (!config.legendOrientation || config.legendOrientation !== 'top') ?
-                        this.generateLegendComponent(config, legendItems) :
+                    (config.legend || legend) && (!config.legendOrientation || config.legendOrientation !== 'top') ?
+                        getLegendComponent(config, legendItems, [], null, height, width) :
                         null
                 }
-            </div>
-        );
-    }
-
-    /**
-     * Generate legend component for the scatter plot.
-     * @param config chart configuration json.
-     * @param legendItems legendItems array
-     */
-    generateLegendComponent(config, legendItems) {
-        return (
-            <div
-                style={{
-                    width: !config.legendOrientation ? '20%' :
-                        (() => {
-                            if (config.legendOrientation === 'left' || config.legendOrientation === 'right') {
-                                return '20%';
-                            } else return '100%';
-                        })(),
-                    display: !config.legendOrientation ? 'inline' :
-                        (() => {
-                            if (config.legendOrientation === 'left' || config.legendOrientation === 'right') {
-                                return 'inline';
-                            } else return null;
-                        })(),
-                    float: !config.legendOrientation ? 'right' : (() => {
-                        if (config.legendOrientation === 'left') return 'left';
-                        else if (config.legendOrientation === 'right') return 'right';
-                        else return null;
-                    })(),
-                }}
-            >
-                <VictoryLegend
-                    centerTitle
-                    containerComponent={<VictoryContainer responsive />}
-                    height={(() => {
-                        if (!config.legendOrientation) return this.state.height;
-                        else if (config.legendOrientation === 'left' || config.legendOrientation === 'right') {
-                            return this.state.height;
-                        } else return 100;
-                    })()}
-                    width={(() => {
-                        if (!config.legendOrientation) return 200;
-                        else if (config.legendOrientation === 'left' || config.legendOrientation === 'right') return 200;
-                        else return this.state.width;
-                    })()}
-                    orientation={
-                        !config.legendOrientation ?
-                            'vertical' :
-                            (() => {
-                                if (config.legendOrientation === 'left' || config.legendOrientation === 'right') {
-                                    return 'vertical';
-                                } else {
-                                    return 'horizontal';
-                                }
-                            })()
-                    }
-                    title="Legend"
-                    style={{
-                        title: { fontSize: 25, fill: config.axisLabelColor },
-                        labels: { fontSize: 20, fill: config.axisLabelColor },
-                    }}
-                    data={legendItems.length > 0 ? legendItems : [{
-                        name: 'undefined',
-                        symbol: { fill: '#333' },
-                    }]}
-                />
             </div>
         );
     }

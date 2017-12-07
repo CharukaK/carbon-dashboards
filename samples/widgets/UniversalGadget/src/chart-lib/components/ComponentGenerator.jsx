@@ -28,11 +28,12 @@ import {
 } from 'victory';
 import { Range } from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import { timeFormat } from 'd3';
 
 const DEFAULT_MARK_RADIUS = 4;
 const DEFAULT_AREA_FILL_OPACITY = 0.1;
 
-export function getLineOrAreaComponent(config, chartIndex, onClick) {
+export function getLineOrAreaComponent(config, chartIndex, onClick, xScale) {
     const chartElement = config.charts[chartIndex].type === 'line' ?
         (<VictoryLine
             style={{
@@ -41,6 +42,14 @@ export function getLineOrAreaComponent(config, chartIndex, onClick) {
                         config.charts[chartIndex].style.strokeWidth || null : null,
                 },
             }}
+            animate={
+                config.animate ?
+                {
+                    onEnter: {
+                        duration: 100,
+                    },
+                } : null
+            }
         />) :
         (<VictoryArea
             style={{
@@ -50,6 +59,14 @@ export function getLineOrAreaComponent(config, chartIndex, onClick) {
                         DEFAULT_AREA_FILL_OPACITY,
                 },
             }}
+            animate={
+                config.animate ?
+                {
+                    onEnter: {
+                        duration: 100,
+                    },
+                } : null
+            }
         />);
 
     return ([
@@ -57,8 +74,23 @@ export function getLineOrAreaComponent(config, chartIndex, onClick) {
         (<VictoryPortal>
             <VictoryScatter
                 labels={
-                    d => `${config.x}:${Number(d.x).toFixed(2)}\n
-                ${config.charts[chartIndex].y}:${Number(d.y).toFixed(2)}`
+                    (() => {
+                        if (xScale === 'time' && config.tipTimeFormat) {
+                            return (data) => {
+                                return `${config.x}:${timeFormat(config.tipTimeFormat)(new Date(data.x))}\n` +
+                                    `${config.charts[chartIndex].y}:${Number(data.y).toFixed(2)}`;
+                            };
+                        } else {
+                            return (d) => {
+                                if (isNaN(d.x)) {
+                                    return `${config.x}:${d.x}\n${config.charts[chartIndex].y}:${Number(d.y).toFixed(2)}`;
+                                } else {
+                                    return `${config.x}:${Number(d.x).toFixed(2)}\n
+                                    ${config.charts[chartIndex].y}:${Number(d.y).toFixed(2)}`;
+                                }
+                            };
+                        }
+                    })()
                 }
                 labelComponent={
                     <VictoryTooltip
@@ -87,16 +119,43 @@ export function getLineOrAreaComponent(config, chartIndex, onClick) {
                         },
                     },
                 }]}
+                animate={
+                    config.animate ?
+                    {
+                        onEnter: {
+                            duration: 100,
+                        },
+                    } : null
+                }
 
             />
         </VictoryPortal>),
     ]);
 }
 
-export function getBarComponent(config, chartIndex, data, color, onClick) {
+export function getBarComponent(config, chartIndex, data, color, onClick, xScale) {
     return (
+
         <VictoryBar
-            labels={d => `${config.x}:${d.x}\n${config.charts[chartIndex].y}:${d.y}`}
+            labels={
+                (() => {
+                    if (xScale === 'time' && config.tipTimeFormat) {
+                        return (d) => {
+                            return `${config.x}:${timeFormat(config.tipTimeFormat)(new Date(d.x))}\n` +
+                                `${config.charts[chartIndex].y}:${Number(d.y).toFixed(2)}`;
+                        };
+                    } else {
+                        return (d) => {
+                            if (isNaN(d.x)) {
+                                return `${config.x}:${d.x}\n${config.charts[chartIndex].y}:${Number(d.y).toFixed(2)}`;
+                            } else {
+                                return `${config.x}:${Number(d.x).toFixed(2)}\n
+                                ${config.charts[chartIndex].y}:${Number(d.y).toFixed(2)}`;
+                            }
+                        };
+                    }
+                })()
+            }
             labelComponent={
                 <VictoryTooltip
                     orientation='top'
@@ -121,6 +180,14 @@ export function getBarComponent(config, chartIndex, data, color, onClick) {
                     },
                 },
             }]}
+            animate={
+                config.animate ?
+                {
+                    onEnter: {
+                        duration: 100,
+                    },
+                } : null
+            }
         />
     );
 }
@@ -139,7 +206,7 @@ export function getLegendComponent(config, legendItems, ignoreArray, interaction
     return (
         <div
             style={{
-                width: !config.legendOrientation ? '15%' :
+                width: !config.legendOrientation ? '20%' :
                     (() => {
                         if (config.legendOrientation === 'left' || config.legendOrientation === 'right') {
                             return '20%';
@@ -183,16 +250,21 @@ export function getLegendComponent(config, legendItems, ignoreArray, interaction
                             }
                         })()
                 }
-                title="Legend"
                 style={{
-                    title: { fontSize: 25, fill: config.style ? config.style.legendTitleColor : null },
-                    labels: { fontSize: 20, fill: config.style ? config.style.legendTextColor : null },
+                    title: {
+                        fontSize: (config.style ? (config.style.legendTitleSize || 25) : 25),
+                        fill: config.style ? config.style.legendTitleColor : null,
+                    },
+                    labels: {
+                        fontSize: config.style ? (config.style.legendTextSize || 18) : 18,
+                        fill: config.style ? config.style.legendTextColor : null,
+                    },
                 }}
                 data={legendItems.length > 0 ? legendItems : [{
                     name: 'undefined',
                     symbol: { fill: '#333' },
                 }]}
-                itemsPerRow={config.legendOrientation === 'top' || config.legendOrientation === 'bottom' ? 5 : 4}
+                itemsPerRow={config.legendOrientation === 'top' || config.legendOrientation === 'bottom' ? 10 : null}
                 events={[
                     {
                         target: 'data',
@@ -215,8 +287,8 @@ export function getLegendComponent(config, legendItems, ignoreArray, interaction
 
 export function getBrushComponent(xScale, xRange, xDomain, reset, onChange) {
     return (
-        <div style={{ width: '80%', height: 40, display: 'inline', float: 'left', right: 10 }} >
-            <div style={{ width: '10%', display: 'inline', float: 'left', left: 20 }} >
+        <div style={{ width: '80%', height: 40, display: 'inline', float: 'left', right: 10 }}>
+            <div style={{ width: '10%', display: 'inline', float: 'left', left: 20 }}>
                 <button
                     onClick={() => {
                         reset(xRange);
@@ -225,7 +297,7 @@ export function getBrushComponent(xScale, xRange, xDomain, reset, onChange) {
                     Reset
                 </button>
             </div>
-            <div style={{ width: '90%', display: 'inline', float: 'right' }} >
+            <div style={{ width: '90%', display: 'inline', float: 'right' }}>
                 <Range
                     max={xScale === 'time' ? xRange[1].getDate() : xRange[1]}
                     min={xScale === 'time' ? xRange[0].getDate() : xRange[0]}

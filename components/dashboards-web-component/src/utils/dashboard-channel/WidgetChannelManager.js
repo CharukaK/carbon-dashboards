@@ -18,14 +18,14 @@ export default class WidgetChannelManager {
 
     constructor() {
         this.webSocket = null;
-        this.widgetMap = new Map();
+        this.widgetMap = {};
         this.subscribeWidget = this.subscribeWidget.bind(this);
         this.unsubscribeWidget = this.unsubscribeWidget.bind(this);
-        this._initializeProvider = this._initializeProvider.bind(this);
         this._initializeWebSocket = this._initializeWebSocket.bind(this);
         this._wsOnClose = this._wsOnClose.bind(this);
         this._wsOnError = this._wsOnError.bind(this);
         this._wsOnMessage = this._wsOnMessage.bind(this);
+        this._initializeWebSocket();
 
     }
 
@@ -36,10 +36,12 @@ export default class WidgetChannelManager {
      * @param config
      */
     subscribeWidget(widgetId, callback, config) {
-        this.widgetMap.set(widgetId, callback);
-        config['action']= 'subscribe';
-        config['topic']= widgetId;
-        this.webSocket.send(JSON.stringify(config));
+        this.widgetMap[widgetId]=callback;
+        this.waitForConn(this.webSocket,()=>{
+            config['action'] = 'subscribe';
+            config['topic'] = 'charuka';
+            this.webSocket.send(JSON.stringify(config));
+        })
     }
 
     /**
@@ -47,7 +49,7 @@ export default class WidgetChannelManager {
      * @param widgetId
      */
     unsubscribeWidget(widgetId) {
-        this.widgetMap.delete(widgetId);
+        delete this.widgetMap[widgetId];
         let config = {
             topic: widgetId,
             providerName: null,
@@ -62,7 +64,7 @@ export default class WidgetChannelManager {
      * @private
      */
     _initializeWebSocket() {
-        this.webSocket = new WebSocket('wss://'); // TODO: finalize on the web-socket endpoint
+        this.webSocket = new WebSocket('wss://'+window.location.host+'/data-provider');
         this.webSocket.onmessage = this._wsOnMessage;
         this.webSocket.onerror = this._wsOnError;
         this.webSocket.onclose = this._wsOnClose;
@@ -74,10 +76,12 @@ export default class WidgetChannelManager {
      * @private
      */
     _wsOnMessage(message) {
+        console.info(message);
         let data = JSON.parse(message.data);
-
-        if(this.widgetMap.has(data.topic)) {
-            this.widgetMap.get(data.topic)(data);
+        console.info(data);
+        console.info(this.widgetMap);
+        if (this.widgetMap[data.topic]) {
+            this.widgetMap[data.topic](data);
         } else {
             // TODO: Error logging
         }
@@ -89,6 +93,7 @@ export default class WidgetChannelManager {
      * @private
      */
     _wsOnError(message) {
+        console.info(message);
         // TODO: handle error message
     }
 
@@ -98,7 +103,19 @@ export default class WidgetChannelManager {
      * @private
      */
     _wsOnClose(message) {
+        console.info('close');
         // TODO: handle on close event
     }
 
+    waitForConn(socket,callback) {
+        setTimeout(()=>{
+            if(socket.readyState === 1) {
+                if(callback!== null){
+                    callback();
+                }
+            }else {
+                this.waitForConn(socket,callback);
+            }
+        },1000)
+    }
 }

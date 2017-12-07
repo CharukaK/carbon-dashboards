@@ -18,13 +18,13 @@
 // TODO:Fix dynamically changing config for other charts
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import BasicCharts from './components/BasicChart.jsx';
-import ScatterCharts from './components/ScatterChart.jsx';
-import PieCharts from './components/PieChart.jsx';
-import MapGenerator from './components/MapChart.jsx';
-import TableCharts from './components/TableChart.jsx';
-import NumberCharts from './components/NumberChart.jsx';
-import InlineCharts from './components/InlineChart.jsx';
+import BasicCharts from './components/BasicChart';
+import ScatterCharts from './components/ScatterChart';
+import PieCharts from './components/PieChart';
+import MapGenerator from './components/MapChart';
+import TableCharts from './components/TableChart';
+import NumberCharts from './components/NumberChart';
+import InlineCharts from './components/InlineChart';
 import VizGError from './VizGError';
 
 class VizG extends Component {
@@ -35,7 +35,7 @@ class VizG extends Component {
             config: props.config,
             data: props.data,
             metadata: props.metadata,
-            onClick: props.onClick
+            onClick: props.onClick,
         };
     }
 
@@ -56,7 +56,7 @@ class VizG extends Component {
     }
 
     render() {
-        const { config, data, metadata, onClick } = this.state;
+        const { config, data, metadata, onClick } = this.props;
         const chartType = config.charts[0].type;
 
         return (
@@ -89,12 +89,29 @@ class VizG extends Component {
                         data={data}
                         onClick={onClick}
                         yDomain={this.props.yDomain}
+                        append={this.props.append}
                     />
                 );
             case 'arc':
-                return (<PieCharts config={config} metadata={metadata} data={data} onClick={onClick} />);
+                return (
+                    <PieCharts
+                        config={config}
+                        metadata={metadata}
+                        data={data}
+                        onClick={onClick}
+                        append={this.props.append}
+                    />
+                );
             case 'scatter':
-                return <ScatterCharts config={config} metadata={metadata} data={data} onClick={onClick} />;
+                return (
+                    <ScatterCharts
+                        config={config}
+                        metadata={metadata}
+                        data={data}
+                        onClick={onClick}
+                        append={this.props.append}
+                    />
+                );
             case 'map':
                 return <MapGenerator config={config} metadata={metadata} data={data} onClick={onClick} />;
             case 'table':

@@ -13,47 +13,29 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 */
+import React from 'react';
 import ExtendedWidget from "./ExtendedWidget";
-import VizG from './VizG/VizG';
+import VizG from './chart-lib/VizG';
 
 export default class UniversalGadget extends ExtendedWidget {
 
     constructor(props) {
-        super(props);
+        super(props.neededProps);
         this.state = {
+            id: props.id,
+            width: props.glContainer.width,
+            height: props.glContainer.height,
             metadata: null,
             data: null,
-            config: props.gadgetConfig['chart-conf'],
-        }
+            config: props.config['chart-conf'],
+        };
+        this.handleResize = this.handleResize.bind(this);
+        this.props.glContainer.on('resize', this.handleRessssize);
+        this.handleWidgetData = this.handleWidgetData.bind(this);
     }
     componentDidMount() {
         this.handleWidgetData = this.handleWidgetData.bind(this);
-        let providerConfiguration = this.props.gadgetConfig['provider-conf'];
-        // {
-        //     providerName: 'RDBMSBatchDataProvider',
-        //         dataProviderConfiguration: {
-        //     datasourceName: 'DEMO_DB',
-        //         query: 'select * from FraudTable',
-        //         tableName: 'FraudTable',
-        //         incrementalColumn: 'PersonID',
-        //         publishingInterval: 5,
-        //         purgingInterval: 5,
-        //         publishingLimit: 1000,
-        //         purgingLimit: 1000,
-        //         isPurgingEnable: false,
-        // }
-
-        // {
-        //     x: 'rpm',
-        //         charts: [
-        //     {type: 'line', y: 'horsepower', fill: '#2ca02c'},
-        //     {type: 'line', y: 'torque', fill: '#ff7f0e'},
-        // ],
-        //     maxLength: 7,
-        //     width: 700,
-        //     height: 450,
-        // }
-
+        let providerConfiguration = this.props.config['provider-conf'];
         super.getWidgetChannelManager().subscribeWidget(this.props.id,this.handleWidgetData,providerConfiguration);
     }
 
@@ -62,15 +44,22 @@ export default class UniversalGadget extends ExtendedWidget {
     }
 
     handleWidgetData(data) {
+        console.info(data);
         this.setState({
             metadata: data.metadata,
             data: data.data
         })
     }
 
-    render() {
+    renderWidget() {
         return(
             <VizG config={this.state.config} metadata={this.state.metadata} data={this.state.data} />
         );
     }
+
+    handleResize() {
+        this.setState({width: this.props.glContainer.width, height: this.props.glContainer.height});
+    }
 }
+
+global.dashboard.registerWidget("UniversalGadget", UniversalGadget);
