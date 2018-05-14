@@ -19,7 +19,7 @@
         "test": "react-scripts test --env=jsdom",
         "eject": "react-scripts eject",
         "clean": "rimraf dist",
-        "dev": "NODE_ENV=development webpack -d --config webpack.config.js --watch"
+        "dev": "NODE_ENV=development webpack -d --config webpack.config.js --watch --progress"
     },
     "devDependencies": {
         "ajv": "^5.2.2",

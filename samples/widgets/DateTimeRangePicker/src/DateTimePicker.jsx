@@ -16,9 +16,10 @@
  * under the License.
  */
 import React from 'react';
-import {MenuItem} from 'material-ui/Menu';
+import { MenuItem, Typography } from 'material-ui';
 import Select from 'material-ui/Select';
 import moment from 'moment';
+// import './styles/main.css';
 
 export default class DateTimePicker extends React.Component {
     constructor(props) {
@@ -37,6 +38,7 @@ export default class DateTimePicker extends React.Component {
     }
 
     handleOnChange(property, evt) {
+
         let { inputType, onChange } = this.props;
         let state = this.state;
 
@@ -68,15 +70,16 @@ export default class DateTimePicker extends React.Component {
         let { year, month, days, time } = this.state;
         let { inputType } = this.props;
 
+
         switch (inputType) {
             case 'hour':
-                time = moment().format('HH:00:00.000');
+                time = moment(time, 'HH:mm').format('HH:00:00.000');
                 break;
             case 'minute':
-                time = moment().format('HH:mm:00.000');
+                time = moment(time, 'HH:mm').format('HH:mm:00.000');
                 break;
             case 'seconds':
-                time = moment().format('HH:mm:ss.000');
+                time = moment(time, 'HH:mm:ss').format('HH:mm:ss.000');
                 break;
         }
 
@@ -94,7 +97,6 @@ export default class DateTimePicker extends React.Component {
                                 onChange={event => {
                                     this.handleOnChange('year', event);
                                 }}
-
                             >
                                 {
                                     this.generateYears()
@@ -137,10 +139,16 @@ export default class DateTimePicker extends React.Component {
                     ['milliseconds', 'hour', 'minute', 'seconds'].indexOf(inputType) > -1 ?
                         <div>
                             <br/>Time<br/>
+                            <div className={'MuiFormControl-root-69'}>
+                                <div className={'MuiInput-root-52 MuiInput-formControl-53 MuiInput-underline-56 underline'}>
+                                    <input className={'MuiInput-input-60'} type="time" step={this.getTimeStep(inputType)} value={time} onChange={(evt) => {
+                                        this.handleOnChange('time', evt);
 
-                            <input type="time" step={this.getTimeStep(inputType)} value={time} onChange={(evt) => {
-                                this.handleOnChange('time', evt);
-                            }}/>
+                                    }}/>
+
+                                </div>
+                            </div>
+
                         </div>:
                         null
 

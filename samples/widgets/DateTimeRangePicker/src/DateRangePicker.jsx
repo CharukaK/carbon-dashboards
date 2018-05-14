@@ -15,6 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import React from 'react';
 import Widget from '@wso2-dashboards/widget';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
@@ -23,6 +24,9 @@ import GranularityModeSelector from "./GranularityModeSelector";
 import CustomTimeRangeSelector from "./CustomTimeRangeSelector";
 import Moment from 'moment';
 import { Scrollbars } from 'react-custom-scrollbars';
+import {MenuItem} from 'material-ui/Menu';
+import Select from 'material-ui/Select';
+import './styles/main.css';
 
 const theme = createMuiTheme({
     palette: {
@@ -40,12 +44,15 @@ export default class DateRangePicker extends Widget {
             width: props.glContainer.width,
             height: props.glContainer.height,
             granularityMode: null,
+            granularityValue: '',
         };
 
         this.handleResize = this.handleResize.bind(this);
         this.props.glContainer.on('resize', this.handleResize);
         this.handleGranularityChange = this.handleGranularityChange.bind(this);
         this.publishTimeRange = this.publishTimeRange.bind(this);
+        this.getTimeIntervalDescriptor = this.getTimeIntervalDescriptor.bind(this);
+        this.generateGranularitySelector = this.generateGranularitySelector.bind(this);
 
     }
 
@@ -59,9 +66,10 @@ export default class DateRangePicker extends Widget {
 
     handleGranularityChange(mode) {
 
+        let granularity = '';
+        let startTime = null;
+
         if(mode !== 'custom') {
-            let startTime = null;
-            let granularity = null;
 
             switch (mode) {
                 case '1 Min':
@@ -74,7 +82,7 @@ export default class DateRangePicker extends Widget {
                     break;
                 case '1 Hour' :
                     startTime = Moment().subtract(1, 'hours').toDate();
-                    granularity = 'hour';
+                    granularity = 'minute';
                     break;
                 case '1 Day':
                     startTime = Moment().subtract(1, 'days').toDate();
@@ -86,7 +94,7 @@ export default class DateRangePicker extends Widget {
                     break;
                 case '1 Month':
                     startTime = Moment().subtract(1, 'months').toDate();
-                    granularity = 'month';
+                    granularity = 'day';
                     break;
                 case '3 Months':
                     startTime = Moment().subtract(3, 'months').toDate();
@@ -98,18 +106,18 @@ export default class DateRangePicker extends Widget {
                     break;
                 case '1 Year':
                     startTime = Moment().subtract(1, 'years').toDate();
-                    granularity = 'year';
+                    granularity = 'month';
                     break;
             }
 
             this.publishTimeRange({
-                granularity: '',
+                granularity: granularity,
                 from: startTime.getTime(),
                 to: new Date().getTime()
             });
         }
 
-        this.setState({granularityMode: mode})
+        this.setState({ granularityMode: mode, granularityValue: granularity, startTime: startTime, endTime: new Date() });
     }
 
     render() {
@@ -118,7 +126,7 @@ export default class DateRangePicker extends Widget {
         return (
             <MuiThemeProvider theme={theme}>
                 <Scrollbars style={{ width, height }} >
-                    <div style={{margin: '2%'}}>
+                    <div style={{ margin: '2%', maxWidth: 840 }}>
                         <GranularityModeSelector onChange={this.handleGranularityChange} />
                         {
                             granularityMode === 'custom' ?
@@ -138,67 +146,91 @@ export default class DateRangePicker extends Widget {
 
         switch (granularityMode) {
             case '1 Min':
-                startTime = Moment().subtract(1, 'minutes').format("YYYY/MMM/DD hh:mm A");
-                endTime = Moment().format("YYYY/MMM/DD hh:mm A");
+                startTime = Moment().subtract(1, 'minutes').format("DD-MMM-YYYY hh:mm A");
+                endTime = Moment().format("DD-MMM-YYYY hh:mm A");
                 granularity = 'minute';
                 break;
             case '15 Min':
-                startTime = Moment().subtract(15, 'minutes').format("YYYY/MMM/DD hh:mm A");
-                endTime = Moment().format("YYYY/MMM/DD hh:mm A");
+                startTime = Moment().subtract(15, 'minutes').format("DD-MMM-YYYY hh:mm A");
+                endTime = Moment().format("DD-MMM-YYYY hh:mm A");
                 granularity = 'minute';
                 break;
             case '1 Hour' :
-                startTime = Moment().subtract(1, 'hours').format("YYYY/MMM/DD hh:mm A");
-                endTime = Moment().format("YYYY/MMM/DD hh:mm A");
-                granularity = 'hour';
+                startTime = Moment().subtract(1, 'hours').format("DD-MMM-YYYY hh:mm A");
+                endTime = Moment().format("DD-MMM-YYYY hh:mm A");
+                granularity = 'minute';
                 break;
             case '1 Day':
-                startTime = Moment().subtract(1, 'days').format("YYYY/MMM/DD");
-                endTime = Moment().format("YYYY/MMM/DD");
+                startTime = Moment().subtract(1, 'days').format("DD-MMM-YYYY");
+                endTime = Moment().format("DD-MMM-YYYY");
                 granularity = 'day';
                 break;
             case '7 Days':
-                startTime = Moment().subtract(7, 'days').format("YYYY/MMM/DD");
-                endTime = Moment().format("YYYY/MMM/DD");
+                startTime = Moment().subtract(7, 'days').format("DD-MMM-YYYY");
+                endTime = Moment().format("DD-MMM-YYYY");
                 granularity = 'day';
                 break;
             case '1 Month':
-                startTime = Moment().subtract(1, 'months').format("YYYY/MMM");
-                endTime = Moment().format('YYYY/MMM');
+                startTime = Moment().subtract(1, 'months').format("MMM-YYYY");
+                endTime = Moment().format('MMM-YYYY');
                 granularity = 'month';
                 break;
             case '3 Months':
-                startTime = Moment().subtract(3, 'months').format('YYYY/MMM');
-                endTime = Moment().format('YYYY/MMM');
+                startTime = Moment().subtract(3, 'months').format('MMM-YYYY');
+                endTime = Moment().format('MMM-YYYY');
                 granularity = 'month';
                 break;
             case '6 Months':
-                startTime = Moment().subtract(6, 'months').format('YYYY/MMM');
-                endTime = Moment().format('YYYY/MMM');
+                startTime = Moment().subtract(6, 'months').format('MMM-YYYY');
+                endTime = Moment().format('MMM-YYYY');
                 granularity = 'month';
                 break;
             case '1 Year':
                 startTime = Moment().subtract(1, 'years').format('YYYY');
                 endTime = Moment().format('YYYY');
-                granularity = 'year';
+                granularity = 'month';
                 break;
         }
 
         if (granularityMode) {
             return (
-                <span
+                <div
                     style={{
-                        marginTop: 10
+                        marginTop: 15
                     }}
                 >
-                    {`${startTime} - ${endTime} per ${granularity}`}
-                </span>
+                    {`${startTime}  to  ${endTime}  per  `}{this.generateGranularitySelector()}
+                </div>
             )
         } else {
             return null;
         }
     }
 
+    generateGranularitySelector() {
+        return(
+            <Select
+                className={'perUnderline'}
+                value={this.state.granularityValue}
+                onChange={(evt)=> {
+                    super.publish({
+                        granularity: this.state.granularityValue,
+                        from: this.state.startTime.getTime(),
+                        to: this.state.endTime.getTime(),
+                    });
+                    this.setState({ granularityValue: evt.target.value });
+                }}
+            >
+                <MenuItem value={'millisecond'}>Millisecond</MenuItem>
+                <MenuItem value={'second'}>Second</MenuItem>
+                <MenuItem value={'minute'}>Minute</MenuItem>
+                <MenuItem value={'hour'}>Hour</MenuItem>
+                <MenuItem value={'day'}>Day</MenuItem>
+                <MenuItem value={'month'}>Month</MenuItem>
+                <MenuItem value={'year'}>Year</MenuItem>
+            </Select>
+        )
+    }
 }
 
 global.dashboard.registerWidget("DateRangePicker", DateRangePicker);

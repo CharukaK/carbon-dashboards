@@ -48,10 +48,6 @@ export default class CustomTimeRangeSelector extends React.Component {
         let {inputType} = this.state;
         let { publishMethod } = this.props;
 
-        publishMethod('hasha');
-
-        console.info(this.props);
-
         return (
             <div style={{marginTop: 10}}>
                 <div
@@ -60,11 +56,13 @@ export default class CustomTimeRangeSelector extends React.Component {
                         marginBottom: 10
                     }}
                 >
-                    Per
+                    Per<br />
                     <Select
                         value={inputType}
                         style={{
-                            width: '100%'
+                            width: '50%',
+                            minWidth: 200,
+                            maxWidth: 400,
                         }}
                         onChange={(evt)=>{
                             this.setState({ inputType: evt.target.value })
@@ -80,30 +78,34 @@ export default class CustomTimeRangeSelector extends React.Component {
                     </Select>
                 </div>
                 <div
-                    style={{
-                        width: '50%',
-                        float: 'left',
-                    }}
+                    style={{ minWidth:420 }}
                 >
-                    From
-                    <br/>
-                    <DateTimePicker
-                        onChange={this.handleStartTimeChange}
-                        inputType={inputType}
-                    />
-                </div>
-                <div
-                    style={{
-                        width: '50%',
-                        float: 'right',
-                    }}
-                >
-                    To
-                    <br/>
-                    <DateTimePicker
-                        onChange={this.handleEndTimeChange}
-                        inputType={inputType}
-                    />
+                    <div
+                        style={{
+                            width: '50%',
+                            float: 'left',
+                        }}
+                    >
+                        From
+                        <br/>
+                        <DateTimePicker
+                            onChange={this.handleStartTimeChange}
+                            inputType={inputType}
+                        />
+                    </div>
+                    <div
+                        style={{
+                            width: '50%',
+                            float: 'right',
+                        }}
+                    >
+                        To
+                        <br/>
+                        <DateTimePicker
+                            onChange={this.handleEndTimeChange}
+                            inputType={inputType}
+                        />
+                    </div>
                 </div>
                 <Button
                     variant="raised"

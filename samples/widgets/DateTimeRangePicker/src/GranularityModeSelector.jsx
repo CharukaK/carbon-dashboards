@@ -82,11 +82,9 @@ export default class GranularityModeSelector extends React.Component {
 
         let { granularityMode, granularityModeValue } = this.state;
 
-        console.info(granularityMode);
-
         return (
             <div>
-                <div>
+                <div style={blocks}>
                     Last :
                 </div>
                 <div style={blocks}>
