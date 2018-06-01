@@ -214,7 +214,7 @@ export default class DateRangePicker extends Widget {
                 value={this.state.granularityValue}
                 onChange={(evt)=> {
                     super.publish({
-                        granularity: this.state.granularityValue,
+                        granularity: evt.target.value,
                         from: this.state.startTime.getTime(),
                         to: this.state.endTime.getTime(),
                     });
