@@ -45,6 +45,7 @@
         <module>TotalUpdates</module>
         <module>WidgetState</module>
         <module>UserInfo</module>
+        <module>DateTimeRangePicker</module>
         <module>sales-dashboard-widgets/CustomersByProduct</module>
         <module>sales-dashboard-widgets/CustomersPerYear</module>
         <module>sales-dashboard-widgets/OverallProductInfo</module>
