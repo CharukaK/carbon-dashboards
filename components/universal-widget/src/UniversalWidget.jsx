@@ -59,7 +59,8 @@ export default class UniversalWidget extends Widget {
                     this.handleCustomWidgetInputs(providerConfiguration.configs.config.queryData)
                 }
                 this.state.providerConfigs = providerConfiguration;
-                super.getWidgetChannelManager().subscribeWidget(this.props.id, this.handleWidgetData, providerConfiguration);
+                super.getWidgetChannelManager().
+                subscribeWidget(this.props.id, this.handleWidgetData, providerConfiguration);
                 this.setState({config: message.data.configs.chartConfig});
             })
             .catch((error) => {
@@ -83,7 +84,7 @@ export default class UniversalWidget extends Widget {
                         this.props.configs.pubsub.widgetInputOutputMapping.filter(function (widgetInputOutputMapping) {
                             return widgetInputOutputMapping.publisherId === publisherId
                         });
-                    super.subscribe(this.subscribeCallback, this.props.id + "_" + publisherId, this);
+                    super.subscribe(this.subscribeCallback, publisherId, this);
                 });
             }
     }
@@ -102,7 +103,8 @@ export default class UniversalWidget extends Widget {
         eval(this.state.queryData.queryFunction)
         this.state.providerConfigs.configs.config.queryData.query = this.getQuery.apply(this, this.state.widgetInputs);
         super.getWidgetChannelManager().unsubscribeWidget(this.props.id);
-        super.getWidgetChannelManager().subscribeWidget(this.props.widgetID, this.handleWidgetData, this.state.providerConfigs);
+        super.getWidgetChannelManager().
+        subscribeWidget(this.props.widgetID, this.handleWidgetData, this.state.providerConfigs);
         this.setState({config: this.state.config});
 
     }
