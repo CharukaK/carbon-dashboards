@@ -1,0 +1,11 @@
+{
+    "name": "Services Table",
+    "id": "SGServices",
+    "thumbnailURL": "",
+    "configs": {
+        "userPrefs": true,
+        "pubsub": {
+          "types": ["publisher"]
+        }
+    }
+}

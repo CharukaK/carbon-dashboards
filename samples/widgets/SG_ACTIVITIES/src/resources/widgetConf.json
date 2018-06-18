@@ -1,0 +1,11 @@
+{
+    "name": "Activities Table",
+    "id": "SGActivities",
+    "thumbnailURL": "",
+    "configs": {
+        "userPrefs": true,
+        "pubsub": {
+          "types": ["publisher"]
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "name": "Events Table",
+    "id": "SGEvents",
+    "thumbnailURL": "",
+    "configs": {
+        "userPrefs": true,
+        "pubsub": {
+          "types": ["subscriber"]
+        }
+    }
+}
