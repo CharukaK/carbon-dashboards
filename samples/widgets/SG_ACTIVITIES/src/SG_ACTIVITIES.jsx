@@ -8,11 +8,7 @@ import './resources/css/tableChart.css';
 import { timeFormat } from 'd3-time-format';
 import Widget from '@wso2-dashboards/widget';
 
-const theme = createMuiTheme({
-    palette: {
-        type: 'dark',
-    },
-});
+
 
 class SGActivities extends Widget {
 
@@ -40,12 +36,12 @@ class SGActivities extends Widget {
             configs: {
                 type: 'RDBMSBatchDataProvider',
                 config: {
-                    datasourceName: 'S_GRID_DB',
+                    datasourceName: 'S_GRID',
                     tableName: 'SG_ACTIVITIES',
                     queryData: {
-                        query: 'select activity_id, status, flow_status, starttime, endtime, duration, nb_events, service_name from SG_ACTIVITIES',
+                        query: 'select ACTIVITY_ID, STATUS, FLOW_STATUS, STARTTIME, ENDTIME, DURATION, NB_EVENTS, SERVICE_NAME from SG_ACTIVITIES',
                     },
-                    incrementalColumn: 'activity_id',
+                    incrementalColumn: 'ACTIVITY_ID',
                     publishingInterval: 5,
                     publishingLimit: 100,
                     isPurgingEnable: false,
@@ -57,33 +53,38 @@ class SGActivities extends Widget {
         this.tableConfig = [
             {
                 Header: 'Activity ID',
-                accessor: 'activity_id',
+                accessor: 'ACTIVITY_ID',
                 Cell: this.getCellComponent,
+            },
+            {
+                Header: 'Events',
+                accessor: 'NB_EVENTS',
+                Cell: this.getCellComponent,
+                maxWidth: 70,
             },
             {
                 Header: 'Status',
-                accessor: 'status',
+                accessor: 'STATUS',
                 Cell: this.getCellComponent,
+                maxWidth: 90,
             },
             {
                 Header: 'Start Time',
-                accessor: 'starttime',
+                accessor: 'STARTTIME',
                 Cell: this.getCellComponent,
+                maxWidth: 170,
             },
             {
                 Header: 'End Time',
-                accessor: 'endtime',
+                accessor: 'ENDTIME',
                 Cell: this.getCellComponent,
+                maxWidth: 170,
             },
             {
                 Header: 'Duration',
-                accessor: 'duration',
+                accessor: 'DURATION',
                 Cell: this.getCellComponent,
-            },
-            {
-                Header: 'nb_events',
-                accessor: 'nb_events',
-                Cell: this.getCellComponent,
+                maxWidth: 90,
             },
         ];
     }
@@ -92,15 +93,16 @@ class SGActivities extends Widget {
         return (
             <div
                 style={{
-                    color: this.state.selectedId && this.state.selectedId === props.original['activity_id'] ? '#fff' : '#000',
-                    textAlign: 'center',
-                    background: this.state.selectedId && this.state.selectedId === props.original['activity_id'] ? '#438cad' :
-                        props.original['flow_status'] === 1 ? '#9ce7aa' : '#fbb7a4',
-                    padding: 0,
+                    color: this.state.selectedId && this.state.selectedId === props.original['ACTIVITY_ID'] ? '#fff' : '#000',
+                    textAlign: props.column.id === 'NB_EVENTS' || props.column.id === 'DURATION' ? 'right' : 'left',
+                    background: this.state.selectedId && this.state.selectedId === props.original['ACTIVITY_ID'] ? '#438cad' :
+                        props.original['FLOW_STATUS'] === 1 ? '#9ce7aa' : '#fbb7a4',
+                    padding: 5,
+                    fontSize: 14,
                 }}
             >
                 {
-                    props.column.id === 'starttime' || props.column.id === 'endtime' ?
+                    props.column.id === 'STARTTIME' || props.column.id === 'ENDTIME' ?
                         <span>{timeFormat('%m/%d/%Y, %I:%M:%S %p')(new Date(props.value))}</span> :
                         <span>{props.value}</span>
                 }
@@ -117,6 +119,8 @@ class SGActivities extends Widget {
     }
 
     handleData(response) {
+        const { dataSet } = this.state;
+
         let tmpArr = [];
 
         response.data.forEach((datum) => {
@@ -127,14 +131,29 @@ class SGActivities extends Widget {
             tmpArr.push(obj);
         });
 
-        this.setState((prevState) => {
-            prevState.dataSet = _.unionBy(prevState.dataSet, tmpArr, 'activity_id');
-            return prevState;
-        })
+        tmpArr.forEach(recievedRow => {
+            let arrIndex = _.findIndex(dataSet, (obj) => obj['ACTIVITY_ID'] === recievedRow['ACTIVITY_ID']);
+
+            if(arrIndex > -1) {
+                dataSet[arrIndex] = recievedRow;
+            } else {
+                dataSet.push(recievedRow);
+            }
+        });
+
+
+        this.setState({ dataSet });
     }
 
     render() {
         let { dataSet, filterVal, filterEndTime, filterStartTime, page } = this.state;
+
+        let theme = createMuiTheme({
+            palette: {
+                type: this.props.muiTheme.name,
+            },
+        });
+
         return (
             <MuiThemeProvider theme={theme}>
                 <div style={{ margin: '1% 2% 0 2%' }}>
@@ -206,17 +225,20 @@ class SGActivities extends Widget {
                     </div>
                     <div style={{ clear: 'both' }}>
                         <ReactTable
+                            className={this.props.muiTheme.name === 'light' ? 'lightTheme' : 'darkTheme'}
                             columns={this.tableConfig}
                             data={
                                 filterStartTime && filterEndTime ?
                                     _.filter(dataSet,
-                                        (d) => (d.starttime > filterStartTime.getTime() && d.starttime < filterEndTime.getTime())) :
+                                        (d) => {
+                                            return d.STARTTIME > filterStartTime.getTime() && d.STARTTIME < filterEndTime.getTime();
+                                        }) :
                                     dataSet
                             }
                             page={page}
                             defaultPageSize={10}
                             filtered={[{ // the current filters model
-                                id: 'activity_id',
+                                id: 'ACTIVITY_ID',
                                 value: filterVal,
                             }]}
                             onPageChange={page => this.setState({ page })}
@@ -225,14 +247,24 @@ class SGActivities extends Widget {
                                     return {
                                         onClick: (e) => {
                                             super.publish({
-                                                service: rowInfo.original['service_name'],
-                                                activity: rowInfo.original['activity_id']
+                                                service: rowInfo.original['SERVICE_NAME'],
+                                                activity: rowInfo.original['ACTIVITY_ID']
                                             });
-                                            this.setState({ selectedId: rowInfo.original['activity_id'] })
+                                            this.setState({ selectedId: rowInfo.original['ACTIVITY_ID'] })
                                         },
                                     };
                                 }
                             }
+
+                            defaultSorted={[
+                                {
+                                    id: 'NB_EVENTS'
+                                },
+                                {
+                                    id: 'ENDTIME',
+                                    desc: true,
+                                }
+                            ]}
                         />
                     </div>
                 </div>

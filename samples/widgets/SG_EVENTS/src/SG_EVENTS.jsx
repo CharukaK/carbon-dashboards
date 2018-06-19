@@ -1,6 +1,4 @@
 import React from 'react';
-import TextField from 'material-ui/TextField';
-import Button from 'material-ui/Button';
 import { createMuiTheme, MuiThemeProvider } from 'material-ui';
 import _ from 'lodash';
 import ReactTable from 'react-table';
@@ -8,17 +6,10 @@ import './resources/css/tableChart.css';
 import { timeFormat } from 'd3-time-format';
 import Widget from '@wso2-dashboards/widget';
 
-const theme = createMuiTheme({
-    palette: {
-        type: 'dark',
-    },
-});
-
 class SG_EVENTS extends Widget {
 
     constructor(props) {
         super(props);
-
         this.state = {
             id: props.id,
             width: props.glContainer.width,
@@ -35,27 +26,27 @@ class SG_EVENTS extends Widget {
         this.tableConfig = [
             {
                 Header: 'Service Name',
-                accessor: 'service_name',
+                accessor: 'SERVICE_NAME',
                 Cell: this.getNormalCellComponent
             },
             {
                 Header: 'Activity ID',
-                accessor: 'activity_id',
+                accessor: 'ACTIVITY_ID',
                 Cell: this.getNormalCellComponent
             },
             {
                 Header: 'File Name',
-                accessor: 'file_name',
+                accessor: 'FILE_NAME',
                 Cell: this.getNormalCellComponent
             },
             {
                 Header: 'Timestamp',
-                accessor: 'timestamp',
+                accessor: 'TIMESTAMP',
                 Cell: this.getNormalCellComponent
             },
             {
                 Header: 'File Length',
-                accessor: 'file_length',
+                accessor: 'FILE_LENGTH',
                 Cell: this.getNormalCellComponent
             }
         ];
@@ -66,15 +57,13 @@ class SG_EVENTS extends Widget {
         return (
             <div
                 style={{
-                    color: this.state.selectedId && this.state.selectedId === props.original['service'] ? '#fff' : '#000',
-                    textAlign: 'center',
-                    background: this.state.selectedId && this.state.selectedId === props.original['service'] ?
-                        '#438cad' : '#fff',
-                    padding: 0,
+                    padding: 5,
+                    fontSize: 14,
+                    textAlign: 'left'
                 }}
             >
                 {
-                    props.column.id === 'starttime' || props.column.id === 'endtime' ?
+                    props.column.id === 'TIMESTAMP' ?
                         <span>{timeFormat('%m/%d/%Y, %I:%M:%S %p')(new Date(props.value))}</span> :
                         <span>{props.value}</span>
                 }
@@ -87,20 +76,19 @@ class SG_EVENTS extends Widget {
     }
 
     setReceivedMsg(receivedMessage) {
-        console.info(receivedMessage);
         super.getWidgetChannelManager().unsubscribeWidget(this.props.id);
 
-
+        console.info(receivedMessage);
         let providerConfig = {
             configs: {
                 type: 'RDBMSBatchDataProvider',
                 config: {
-                    datasourceName: 'S_GRID_DB',
+                    datasourceName: 'S_GRID',
                     tableName: 'SG_EVENTS',
                     queryData: {
-                        query: `select * from SG_EVENTS where service_name='${receivedMessage.service}' AND activity_id='${receivedMessage.activity}'`,
+                        query: `select * from SG_EVENTS where SERVICE_NAME='${receivedMessage.service}' AND ACTIVITY_ID='${receivedMessage.activity}'`,
                     },
-                    incrementalColumn: 'activity_id',
+                    incrementalColumn: 'TIMESTAMP',
                     publishingInterval: 5,
                     publishingLimit: 100,
                     isPurgingEnable: false,
@@ -141,10 +129,18 @@ class SG_EVENTS extends Widget {
 
     render() {
         let { dataSet, filterEndTime, filterStartTime } = this.state;
+
+        let theme = createMuiTheme({
+            palette: {
+                type: this.props.muiTheme.name,
+            },
+        });
+
         return (
             <MuiThemeProvider theme={theme}>
                 <div style={{ margin: '1% 2% 0 2%' }}>
                         <ReactTable
+                            className={this.props.muiTheme.name === 'light' ? 'lightTheme' : 'darkTheme'}
                             columns={this.tableConfig}
                             data={
                                 filterStartTime && filterEndTime ?
@@ -152,6 +148,13 @@ class SG_EVENTS extends Widget {
                                         (d) => (d.starttime > filterStartTime.getTime() && d.starttime < filterEndTime.getTime())) :
                                     dataSet
                             }
+                            showPagination={false}
+                            defaultSorted={[
+                                {
+                                    id: 'TIMESTAMP',
+                                    desc: true,
+                                }
+                            ]}
                         />
                     </div>
             </MuiThemeProvider>

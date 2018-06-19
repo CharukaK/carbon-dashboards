@@ -183,12 +183,8 @@
 	border-right: 1px solid rgba(0,0,0,0.06);
 }
 
-.darkTheme .ReactTable .rt-tbody .rt-td {
-	border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.darkTheme .ReactTable .rt-tbody .rt-td:last-child {
-	border-right: 1px solid rgba(255, 255, 255, 0.1);
+.ReactTable.darkTheme .rt-tbody .rt-td {
+	border-right: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .ReactTable .rt-tbody .rt-expandable {

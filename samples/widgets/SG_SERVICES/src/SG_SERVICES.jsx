@@ -8,12 +8,6 @@ import './resources/css/tableChart.css';
 import { timeFormat } from 'd3-time-format';
 import Widget from '@wso2-dashboards/widget';
 
-const theme = createMuiTheme({
-    palette: {
-        type: 'dark',
-    },
-});
-
 class SG_SERVICES extends Widget {
 
     constructor(props) {
@@ -40,12 +34,12 @@ class SG_SERVICES extends Widget {
             configs: {
                 type: 'RDBMSBatchDataProvider',
                 config: {
-                    datasourceName: 'S_GRID_DB',
+                    datasourceName: 'S_GRID',
                     tableName: 'SG_SERVICES',
                     queryData: {
                         query: 'select * from SG_SERVICES',
                     },
-                    incrementalColumn: 'activity_id',
+                    incrementalColumn: 'STARTTIME',
                     publishingInterval: 5,
                     publishingLimit: 100,
                     isPurgingEnable: false,
@@ -57,27 +51,46 @@ class SG_SERVICES extends Widget {
         this.tableConfig = [
             {
                 Header: 'Service',
-                accessor: 'service',
+                accessor: 'SERVICE',
                 Cell: this.getNormalCellComponent
             },
             {
                 Header: 'Transfer',
-                accessor: 'activity_id',
-                Cell: this.getCellComponent
+                accessor: 'FLOW_STATUS',
+                Cell: this.getCellComponent,
+                sortMethod: (a, b, desc) => {
+                    if (a === 0 && b === 0 || a === 3 && b === 3) {
+                        return 0;
+                    } else if (a === 0 && b !== 3) {
+                        return -1;
+                    } else if (a === 3 && b !== 0) {
+                        return -1;
+                    } else if (a===0 && b===3) {
+                        return 1;
+                    } else if (a===3 && b===0) {
+                        return -1;
+                    } else if (a===3 || a===0) {
+                        return -1;
+                    } else if(b===0 || b === 3) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
             },
             {
                 Header: 'From Sys',
-                accessor: 'from_sys',
+                accessor: 'FROM_SYS',
                 Cell: this.getNormalCellComponent
             },
             {
                 Header: 'To Sys',
-                accessor: 'to_sys',
+                accessor: 'TO_SYS',
                 Cell: this.getNormalCellComponent
             },
             {
                 Header: 'Fault Description',
-                accessor: 'faultdescr',
+                accessor: 'FAULTDESCR',
                 Cell: this.getNormalCellComponent
             }
         ];
@@ -85,24 +98,32 @@ class SG_SERVICES extends Widget {
 
     getCellComponent(props) {
         const { original } = props;
+
         return (
             <div
                 style={{
                     background: '#dadada',
                     padding: 0,
+                    fontSize: 14,
                 }}
             >
                 <div
                     style={{
-                        width: `${Math.min(original['nb_events']*25, 100)}%`,
-                        backgroundColor: original['flow_status'] === 0 ? '#ff8000'
-                            : original['flow_status'] === 3 ? '#ff0000'
+                        width: `${Math.min(original['NB_EVENTS'] * 25, 100)}%`,
+                        backgroundColor: original['FLOW_STATUS'] === 0 ? '#ff8000'
+                            : original['FLOW_STATUS'] === 3 ? '#ff0000'
                                 : '#219c38',
                         transition: 'all .2s ease-out',
-                        padding: 0,
+                        padding: 5,
                     }}
                 >
-                    <span>{original['nb_events'] > 1 ? `(${original['nb_events']}/${original['nb_events_total']}) ${original['duration']}ms` : '(1)' }</span>
+                    <span>
+                        {
+                            original['NB_EVENTS'] > 1 ?
+                                `(${original['NB_EVENTS']}/${original['NB_EVENTS_TOTAL']}) ${original['DURATION']}ms` :
+                                '(1)'
+                        }
+                    </span>
                 </div>
             </div>
         )
@@ -114,15 +135,17 @@ class SG_SERVICES extends Widget {
         return (
             <div
                 style={{
-                    color: this.state.selectedId && this.state.selectedId === props.original['service'] ? '#fff' : '#000',
+                    color: this.state.selectedId && this.state.selectedId === props.original['SERVICE'] ? '#fff' : null,
                     textAlign: 'center',
-                    background: this.state.selectedId && this.state.selectedId === props.original['service'] ?
-                        '#438cad' : '#fff',
-                    padding: 0,
+                    background: this.state.selectedId && this.state.selectedId === props.original['SERVICE'] ?
+                        '#438cad' : 'none',
+                    padding: 5,
+                    fontSize: 14,
+                    textAlign: 'left'
                 }}
             >
                 {
-                    props.column.id === 'starttime' || props.column.id === 'endtime' ?
+                    props.column.id === 'STARTTIME' || props.column.id === 'ENDTIME' ?
                         <span>{timeFormat('%m/%d/%Y, %I:%M:%S %p')(new Date(props.value))}</span> :
                         <span>{props.value}</span>
                 }
@@ -139,6 +162,8 @@ class SG_SERVICES extends Widget {
     }
 
     handleData(response) {
+        const { dataSet } = this.state;
+
         let tmpArr = [];
 
         response.data.forEach((datum) => {
@@ -149,14 +174,34 @@ class SG_SERVICES extends Widget {
             tmpArr.push(obj);
         });
 
-        this.setState((prevState) => {
-            prevState.dataSet = _.unionBy(prevState.dataSet, tmpArr, 'service');
-            return prevState;
-        })
+        tmpArr.forEach(recievedRow => {
+            let arrIndex = _.findIndex(dataSet, (obj) => obj['SERVICE'] === recievedRow['SERVICE']);
+
+            if (arrIndex > -1) {
+                dataSet[arrIndex] = recievedRow;
+            } else {
+                dataSet.push(recievedRow);
+            }
+        });
+
+
+        this.setState({ dataSet });
+
+        // this.setState((prevState) => {
+        //     prevState.dataSet = _.unionBy(prevState.dataSet, tmpArr, 'SERVICE');
+        //     return prevState;
+        // })
     }
 
     render() {
-        let { dataSet, filterVal, filterEndTime, filterStartTime, page } = this.state;
+        let { dataSet, filterVal, page } = this.state;
+
+        let theme = createMuiTheme({
+            palette: {
+                type: this.props.muiTheme.name,
+            },
+        });
+
 
         return (
             <MuiThemeProvider theme={theme}>
@@ -187,17 +232,13 @@ class SG_SERVICES extends Widget {
                     </div>
                     <div style={{ clear: 'both' }}>
                         <ReactTable
+                            className={this.props.muiTheme.name === 'light' ? 'lightTheme' : 'darkTheme'}
                             columns={this.tableConfig}
-                            data={
-                                filterStartTime && filterEndTime ?
-                                    _.filter(dataSet,
-                                        (d) => (d.starttime > filterStartTime.getTime() && d.starttime < filterEndTime.getTime())) :
-                                    dataSet
-                            }
+                            data={dataSet}
                             page={page}
                             defaultPageSize={10}
                             filtered={[{ // the current filters model
-                                id: 'service',
+                                id: 'SERVICE',
                                 value: filterVal,
                             }]}
                             onPageChange={page => this.setState({ page })}
@@ -206,14 +247,23 @@ class SG_SERVICES extends Widget {
                                     return {
                                         onClick: (e) => {
                                             super.publish({
-                                                service: rowInfo.original['service'],
-                                                activity: rowInfo.original['activity_id']
+                                                service: rowInfo.original['SERVICE'],
+                                                activity: rowInfo.original['ACTIVITY_ID']
                                             });
-                                            this.setState({ selectedId: rowInfo.original['service'] })
+                                            this.setState({ selectedId: rowInfo.original['SERVICE'] })
                                         },
                                     };
                                 }
                             }
+                            defaultSorted={[
+                                {
+                                    id: 'FLOW_STATUS'
+                                },
+                                {
+                                    id: 'ENDTIME',
+                                    desc: true,
+                                }
+                            ]}
                         />
                     </div>
                 </div>
